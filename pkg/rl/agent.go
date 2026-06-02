@@ -56,7 +56,7 @@ type Agent struct {
 }
 
 // NewAgent creates a new Agent instance
-func NewAgent(config *RLTrainingConfig, seed int64) (*Agent, error) {
+func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 	var theta []float64
 	var nstep int
 	var neps int
@@ -268,7 +268,7 @@ func (a *Agent) UpdateQ(update float64) {
 }
 
 // NewSARSA creates a new SARSA agent
-func NewSARSA(config *RLTrainingConfig, seed int64) (*Agent, error) {
+func NewSARSA(config RLTrainingConfig, seed int64) (*Agent, error) {
 	baseAgent, err := NewAgent(config, seed)
 	if err != nil {
 		return nil, err

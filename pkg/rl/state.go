@@ -38,7 +38,7 @@ func NewStateInstance(memorySize, nActions, nTilings int) *State {
 	}
 }
 
-func NewStateFromConfig(config *RLTrainingConfig) *State {
+func NewStateFromConfig(config RLTrainingConfig) *State {
 	return NewStateInstance(config.Learning.MemorySize, config.Learning.NActions, config.Learning.NTilings)
 }
 

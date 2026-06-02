@@ -39,7 +39,7 @@ type Policy struct {
 	cumulative []float64
 }
 
-func NewPolicyByType(config *RLTrainingConfig, seed int64) *Policy {
+func NewPolicyByType(config RLTrainingConfig, seed int64) *Policy {
 	switch config.Policy.Type {
 	case "random":
 		return NewRandom(config.Learning.NActions, seed)
