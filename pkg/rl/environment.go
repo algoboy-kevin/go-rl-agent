@@ -1,5 +1,7 @@
 package rl
 
+import "context"
+
 type EnvironmentType string
 
 type Environment interface {
@@ -35,5 +37,5 @@ type Environment interface {
 	Clear() error
 
 	// Optional: for injected step that run inside the environment
-	RunEpisode(agent *Agent) error
+	RunEpisode(ctx context.Context, agent *Agent, cb func() int) error
 }
