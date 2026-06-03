@@ -22,13 +22,13 @@ type Environment interface {
 	InitializeTestLogger(outputDir string) error 
 
 	// Write log after episode done
-	WriteEpisodeLog(agentName string, policyValue float64, nStep, episodeCounter int64) error
+	WriteEpisodeLog() error
 
 	// Get row values for stats logger
 	GetStats(agentName string, stepCounter int64) []string
 
 	// Get final result of episode
-	GetEpisodeStats(policyVal float64, episodeCounter int64) []string
+	GetEpisodeStats() (*EpisodeData, error)
 
 	// Update Episode
 	UpdateEpisodeCount(eps int)
