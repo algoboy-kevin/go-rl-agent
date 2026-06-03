@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
-
-	"github.com/algoboy-kevin/go-rl-agent/pkg/environment"
 )
 
 // State represents the environment state with tile-coded features
@@ -52,7 +50,7 @@ func (s *State) Initialise() {
 }
 
 // NewState sets state variables and calculates features
-func (s *State) NewStateFromEnv(env environment.RLEnvironment) error {
+func (s *State) NewStateFromEnv(env Environment) error {
 	s.StateVars = nil
 	stateVars, err := env.GetState()
 	if err != nil {

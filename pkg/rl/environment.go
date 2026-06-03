@@ -1,10 +1,8 @@
-package environment
-
-import "github.com/algoboy-kevin/go-rl-agent/pkg/rl"
+package rl
 
 type EnvironmentType string
 
-type RLEnvironment interface {
+type Environment interface {
 	// To check if the episode ended or limit has reached
 	IsTerminal() bool
 
@@ -37,5 +35,5 @@ type RLEnvironment interface {
 	Clear() error
 
 	// Optional: for injected step that run inside the environment
-	RunEpisode(agent *rl.Agent) error
+	RunEpisode(agent *Agent) error
 }
