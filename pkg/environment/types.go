@@ -33,4 +33,7 @@ type RLEnvironment interface {
 
 	// Optional: for example closing opened orders without reset the final state
 	Clear() error
+
+	// Optional: for injected step that run inside the environment
+	RunEpisode() error
 }
