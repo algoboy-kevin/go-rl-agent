@@ -1,5 +1,7 @@
 package environment
 
+import "github.com/algoboy-kevin/go-rl-agent/pkg/rl"
+
 type EnvironmentType string
 
 type RLEnvironment interface {
@@ -35,5 +37,5 @@ type RLEnvironment interface {
 	Clear() error
 
 	// Optional: for injected step that run inside the environment
-	RunEpisode() error
+	RunEpisode(agent *rl.Agent) error
 }
