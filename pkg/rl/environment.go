@@ -18,7 +18,7 @@ type Environment interface {
 
 	// Add logging
 	InitializeTrainingLogger(outputDir string) error
-	InitializeTestLogger(outputDir string) error 
+	InitializeTestLogger(outputDir string) error
 
 	// Write log after episode done
 	WriteEpisodeLog() error

@@ -3,7 +3,6 @@ package rl
 import (
 	"math"
 	"math/rand"
-
 )
 
 // RewardMeasure defines the type of reward calculation
@@ -124,7 +123,7 @@ func (r *Policy) Sample(qs []float64) uint {
 		return uint(r.rng.Intn(r.nActions)) // Convert to uint
 	case Greedy:
 		return r.GreedySample(qs)
-		
+
 	case EpsilonGreedy:
 		if r.rng.Float64() < r.eps {
 			return uint(r.rng.Intn(r.nActions)) // Fixed: convert to uint
@@ -157,10 +156,10 @@ func (r *Policy) Sample(qs []float64) uint {
 		return uint(r.nActions - 1) // Convert to uint
 	}
 
-	return 0// Convert to uint
+	return 0 // Convert to uint
 }
 
-func (r *Policy) Descr() float64 { 
+func (r *Policy) Descr() float64 {
 	switch r.Kind {
 	case Random:
 		return 0.0
@@ -181,10 +180,10 @@ func (r *Policy) Descr() float64 {
 func (r *Policy) HandleTerminal(episode uint) {
 	switch r.Kind {
 	case Random:
-		return 
+		return
 
 	case Greedy:
-		return 
+		return
 
 	case EpsilonGreedy:
 		if r.epsT == 0 {

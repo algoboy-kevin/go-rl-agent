@@ -70,7 +70,7 @@ func (t *Traces) Update(state *State, action int) {
 			for til := range t.nTilings {
 				t.Set(features[til], 1.0)
 			}
-			
+
 		}
 	}
 }

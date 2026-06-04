@@ -52,10 +52,7 @@ func (s *State) Initialise() {
 // NewState sets state variables and calculates features
 func (s *State) NewStateFromEnv(env Environment) error {
 	s.StateVars = nil
-	stateVars, err := env.GetState()
-	if err != nil {
-		return err
-	}
+	stateVars := env.GetState()
 
 	s.StateVars = stateVars
 

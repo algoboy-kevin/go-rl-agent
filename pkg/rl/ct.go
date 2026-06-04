@@ -22,7 +22,7 @@ func NewCollisionTable(size int, safe bool) *CollisionTable {
 		}
 		tmp /= 2
 	}
-	
+
 	ct := &CollisionTable{
 		data: make([]int64, size),
 		size: size,
@@ -44,12 +44,12 @@ func (ct *CollisionTable) Reset() {
 
 // TilesWithCollisionTable computes tiles using collision table
 func (ct *CollisionTable) TilesWithCollisionTable(
-	tiles []int,      // Output tile indices
-	numTilings int,   // Number of tilings
+	tiles []int, // Output tile indices
+	numTilings int, // Number of tilings
 	floats []float64, // Float variables
-	numFloats int,    // Number of float variables
-	ints []int,       // Int variables
-	numInts int,      // Number of int variables
+	numFloats int, // Number of float variables
+	ints []int, // Int variables
+	numInts int, // Number of int variables
 ) {
 	coordinates := make([]int, numFloats+numInts+1)
 	qState := make([]int, numFloats)
@@ -61,7 +61,7 @@ func (ct *CollisionTable) TilesWithCollisionTable(
 	}
 
 	// Quantize state to integers
-	for i := range numFloats  {
+	for i := range numFloats {
 		qState[i] = int(math.Floor(floats[i] * float64(numTilings)))
 		base[i] = 0
 	}
@@ -74,7 +74,7 @@ func (ct *CollisionTable) TilesWithCollisionTable(
 			if qState[i] >= base[i] {
 				coordinates[i] = qState[i] - ((qState[i] - base[i]) % numTilings)
 			} else {
-				coordinates[i] = qState[i] + 1 + ((base[i]-qState[i]-1)%numTilings) - numTilings
+				coordinates[i] = qState[i] + 1 + ((base[i] - qState[i] - 1) % numTilings) - numTilings
 			}
 			// Compute displacement of next tiling in quantized space
 			base[i] += 1 + (2 * i)
