@@ -14,8 +14,7 @@ type Environment interface {
 	// This include a step in environment
 	PerformAction(action int) error
 	GetReward() float64
-	GetState() ([]float64, error)
-	GetGUIUpdate() any
+	GetState() []float64
 
 	// Add logging
 	InitializeTrainingLogger(outputDir string) error
@@ -24,17 +23,11 @@ type Environment interface {
 	// Write log after episode done
 	WriteEpisodeLog() error
 
-	// Get row values for stats logger
-	GetStats(agentName string, stepCounter int64) []string
-
 	// Get final result of episode
 	GetEpisodeStats() (*EpisodeData, error)
 
 	// Update Episode
 	UpdateEpisodeCount(eps int)
-
-	// Optional: for example closing opened orders without reset the final state
-	Clear() error
 
 	// Optional: for injected step that run inside the environment
 	RunEpisode(ctx context.Context, agent *Agent, cb func() int) error
