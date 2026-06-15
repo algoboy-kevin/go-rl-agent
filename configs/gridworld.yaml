@@ -1,0 +1,35 @@
+learning:
+  memory_size: 4096
+  n_tilings: 8
+  n_actions: 4
+  algorithm: sarsa
+  group_weights: [0.5, 0.0, 0.5]
+  gamma: 0.99
+  lambda: 0.9
+  omega: 0.995
+  alpha_start: 0.1
+  alpha_floor: 0.01
+  beta: 0.005
+
+policy:
+  type: epsilon_greedy
+  eps_init: 0.5
+  eps_floor: 0.01
+  eps_T: 200
+  spread_lookback: 45
+
+model:
+  load_last_checkpoint: false
+  save_every_nstep: 0
+  name: gridworld
+
+training:
+  n_threads: 1
+  n_samples: 1
+  n_episodes: 500
+
+evaluation:
+  n_samples: 19
+  use_train_sample: true
+
+output_dir: "./output/gridworld/test_01"

@@ -128,7 +128,7 @@ func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 		Gamma:              config.Learning.Gamma,
 		Lambda:             config.Learning.Lambda,
 		Rand:               rand.New(rand.NewSource(seed)),
-		Policy:             NewBasePolicy(nActions, seed),
+		Policy:             NewPolicyByType(config, seed),
 		NStep:              nstep,
 		NEpisode:           neps,
 		SaveInterval:       config.Model.SaveEverySteps,
