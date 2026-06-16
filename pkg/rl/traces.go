@@ -60,14 +60,14 @@ func (t *Traces) Update(state *State, action int) {
 		features := state.GetFeatures(a)
 
 		if a != action {
-			// Clear traces for other actions (first group only)
-			for til := range t.nTilings {
+			// Clear traces for other actions (all 3 feature groups)
+			for til := range 3 * t.nTilings {
 				t.Clear(features[til])
 			}
 
 		} else {
-			// Set traces for current action (first group only)
-			for til := range t.nTilings {
+			// Set traces for current action (all 3 feature groups)
+			for til := range 3 * t.nTilings {
 				t.Set(features[til], 1.0)
 			}
 
