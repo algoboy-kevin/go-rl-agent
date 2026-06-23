@@ -3,6 +3,7 @@ package rl
 import (
 	"encoding/gob"
 	"fmt"
+	"log/slog"
 	"math"
 	"math/rand"
 	"os"
@@ -197,9 +198,12 @@ func (a *Agent) HandleTransition(fromState *State, action int, reward float64, t
 	// In Hogwild! mode all workers share the same GlobalStep, so the
 	// save fires at the correct combined step interval regardless of how
 	// many workers are running.
-	if a.SaveInterval > 0 && a.GlobalStep != nil {
+	if a.GlobalStep != nil {
 		global := a.GlobalStep.Add(1)
-		if global%int64(a.SaveInterval) == 0 {
+		if global%5000 == 0 {
+			slog.Info("rl step", "step", global)
+		}
+		if a.SaveInterval > 0 && global%int64(a.SaveInterval) == 0 {
 			filename := fmt.Sprintf("%s_%d.bin", a.Name, global)
 			directory := fmt.Sprintf("%s/checkpoints", a.SaveDirectory)
 			if err := os.MkdirAll(directory, os.ModePerm); err != nil {

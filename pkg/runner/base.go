@@ -89,10 +89,6 @@ func (b *Base) GetAction() int {
 		return -1
 	}
 
-	if b.stepCount%5000 == 0 {
-		slog.Info("rl step", "step", b.stepCount, "action", action)
-	}
-
 	return action
 }
 
