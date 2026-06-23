@@ -277,6 +277,42 @@ func NewSARSA(config RLTrainingConfig, seed int64) (*Agent, error) {
 	return baseAgent, nil
 }
 
+// NewWorkerView creates a worker agent that shares Theta with the parent but
+// has independent Traces, Rand, and Policy. This is the core building block for
+// Hogwild! — each training goroutine gets its own view, and they all accumulate
+// gradients into the same shared weight vector.
+//
+// The returned agent has SaveInterval=0 (workers don't checkpoint), and its
+// NStep/NEpisode start at zero (worker-local counters).
+func (a *Agent) NewWorkerView(config RLTrainingConfig, seed int64) *Agent {
+	return &Agent{
+		Kind:         a.Kind,
+		MemorySize:   a.MemorySize,
+		NTilings:     a.NTilings,
+		NActions:     a.NActions,
+		GroupWeights: a.GroupWeights,
+
+		Theta:  a.Theta, // Shared with parent — Hogwild! relies on this
+		Traces: NewTraces(a.MemorySize, a.NTilings, a.NActions),
+
+		AlphaStart: a.AlphaStart,
+		AlphaFloor: a.AlphaFloor,
+		Omega:      a.Omega,
+		Alpha:      a.AlphaStart,
+		Gamma:      a.Gamma,
+		Lambda:     a.Lambda,
+
+		Rand:   rand.New(rand.NewSource(seed)),
+		Policy: NewPolicyByType(config, seed),
+
+		NStep:    0,
+		NEpisode: 0,
+
+		SaveInterval: 0, // Workers never save — only the main agent checkpoints
+		Name:         a.Name,
+	}
+}
+
 // UpdateWeights computes SARSA weight updates
 func (a *Agent) updateWeightsSarsa(fromState *State, action int, reward float64, toState *State) float64 {
 	q1 := a.GetQ(fromState, action)

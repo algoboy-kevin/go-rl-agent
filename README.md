@@ -12,6 +12,7 @@ A reinforcement learning library in Go featuring **SARSA**(λ) with **linear fun
   - **Boltzmann (Softmax)** with temperature annealing
   - **Greedy** with random tie-breaking
   - **Random**
+- **Hogwild! Multithreaded Training** — Lock-free parallel SARSA(λ) training. Each worker gets its own Traces, Rand, and Policy while sharing the weight vector. Configure via `n_threads` in YAML.
 - **Checkpointing** — Save and load model weights via Go's `gob` encoding. Automatically resumes from the latest checkpoint.
 - **Configurable via YAML** — All hyperparameters, environment settings, and training configuration are defined in a structured YAML config.
 - **Environment Interface** — Abstract `RLEnvironment` interface makes it easy to plug in custom environments (trading, games, etc.).
@@ -22,15 +23,22 @@ A reinforcement learning library in Go featuring **SARSA**(λ) with **linear fun
 pkg/
 ├── environment/
 │   └── types.go          # RLEnvironment interface definition
-└── rl/
-    ├── agent.go          # Core Agent: SARSA, Q-value computation, weight updates, checkpoint save/load
-    ├── config.go         # Full YAML configuration structs (training, policy, market, state, etc.)
-    ├── ct.go             # CollisionTable for hash-based tile coding with collision resolution
-    ├── policy.go         # Action selection: Random, Greedy, Epsilon-Greedy, Boltzmann
-    ├── state.go          # State representation with tile-coded feature extraction
-    ├── tiles.go          # Tile coding algorithm (CMAC) with UNH hashing
-    ├── traces.go         # Accumulating eligibility traces with sparse representation
-    └── types.go          # Serializable SavedAgent struct for checkpointing
+├── rl/
+│   ├── agent.go          # Core Agent: SARSA, Q-value computation, weight updates, checkpoint save/load
+│   ├── config.go         # Full YAML configuration structs (training, policy, market, state, etc.)
+│   ├── ct.go             # CollisionTable for hash-based tile coding with collision resolution
+│   ├── policy.go         # Action selection: Random, Greedy, Epsilon-Greedy, Boltzmann
+│   ├── state.go          # State representation with tile-coded feature extraction
+│   ├── tiles.go          # Tile coding algorithm (CMAC) with UNH hashing
+│   ├── traces.go         # Accumulating eligibility traces with sparse representation
+│   └── types.go          # Serializable SavedAgent struct for checkpointing
+├── runner/
+│   ├── base.go           # Common RL step loop (state refresh → learn → act → execute)
+│   ├── learner.go         # Training episode runner with terminal handling
+│   ├── tester.go          # Evaluation episode runner (no training updates)
+│   └── types.go           # Runner interface definition
+└── trainer/
+    └── trainer.go         # High-level trainer with Hogwild! multi-worker orchestration
 ```
 
 ## Getting Started
@@ -187,6 +195,7 @@ func (e *MyEnv) Clear() error                             { /* ... */ }
 | Function / Method | Description |
 |---|---|
 | `NewSARSA(config, seed)` | Creates a new SARSA(λ) agent |
+| `agent.NewWorkerView(config, seed)` | Creates a worker agent sharing Theta but with independent Traces/Rand/Policy (Hogwild!) |
 | `agent.Action(state)` | Selects an action using the current policy |
 | `agent.HandleTransition(from, action, reward, to)` | Processes a transition: updates traces, weights, and optionally saves a checkpoint |
 | `agent.GetQ(state, action)` | Computes Q-value for a state-action pair |
