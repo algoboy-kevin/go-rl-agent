@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 )
 
 // RewardMeasure defines the type of reward calculation
@@ -53,6 +54,11 @@ type Agent struct {
 	SaveDirectory      string
 	Name               string
 	LoadLastCheckpoint bool
+
+	// GlobalStep is a shared atomic counter across all Hogwild! worker views.
+	// Only the parent Agent creates this; worker views share the pointer.
+	// Used to trigger checkpoint saves at the correct global step interval.
+	GlobalStep *atomic.Int64
 }
 
 // NewAgent creates a new Agent instance
@@ -107,6 +113,9 @@ func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 		}
 	}
 
+	globalStep := new(atomic.Int64)
+	globalStep.Store(int64(nstep))
+
 	agent := &Agent{
 		// Loadable params
 		MemorySize:   memorySize,
@@ -135,6 +144,7 @@ func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 		SaveDirectory:      config.OutputDir,
 		Name:               config.Model.Name,
 		LoadLastCheckpoint: config.Model.LoadLastCheckpoint,
+		GlobalStep:         globalStep,
 	}
 	return agent, nil
 }
@@ -175,7 +185,7 @@ func (a *Agent) HandleTransition(fromState *State, action int, reward float64, t
 	delta := a.UpdateWeights(fromState, action, reward, toState)
 	a.aggDelta += math.Abs(delta)
 	a.updateCounter++
-	a.NStep++
+	a.NStep++ // Per-worker local step counter
 
 	if a.updateCounter%1000 == 0 {
 		// Logging omitted (originally used spdlog)
@@ -183,17 +193,23 @@ func (a *Agent) HandleTransition(fromState *State, action int, reward float64, t
 		a.updateCounter = 0
 	}
 
-	// Save model if needed. TODO: disable during prod
-	if a.SaveInterval > 0 && a.NStep%a.SaveInterval == 0 {
-		filename := fmt.Sprintf("%s_%d.bin", a.Name, a.NStep)
-		directory := fmt.Sprintf("%s/checkpoints", a.SaveDirectory)
-		if err := os.MkdirAll(directory, os.ModePerm); err != nil {
-			panic(err)
-		}
+	// Advance the shared global step counter and check for checkpoint save.
+	// In Hogwild! mode all workers share the same GlobalStep, so the
+	// save fires at the correct combined step interval regardless of how
+	// many workers are running.
+	if a.SaveInterval > 0 && a.GlobalStep != nil {
+		global := a.GlobalStep.Add(1)
+		if global%int64(a.SaveInterval) == 0 {
+			filename := fmt.Sprintf("%s_%d.bin", a.Name, global)
+			directory := fmt.Sprintf("%s/checkpoints", a.SaveDirectory)
+			if err := os.MkdirAll(directory, os.ModePerm); err != nil {
+				panic(err)
+			}
 
-		err := a.SaveModel(directory, filename)
-		if err != nil {
-			panic(err)
+			err := a.SaveModel(directory, filename)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }
@@ -206,6 +222,13 @@ func (a *Agent) SaveModel(directory, filename string) error {
 	}
 	defer file.Close()
 
+	// Use the shared global step counter when available so checkpoints reflect
+	// the total combined training progress across all Hogwild! workers.
+	nstep := a.NStep
+	if a.GlobalStep != nil {
+		nstep = int(a.GlobalStep.Load())
+	}
+
 	encoder := gob.NewEncoder(file)
 	snapshot := SavedAgent{
 		Theta:        a.Theta,
@@ -213,7 +236,7 @@ func (a *Agent) SaveModel(directory, filename string) error {
 		NTilings:     a.NTilings,
 		NActions:     a.NActions,
 		GroupWeights: a.GroupWeights,
-		NStep:        a.NStep,
+		NStep:        nstep,
 		NEpisode:     a.NEpisode,
 	}
 	return encoder.Encode(snapshot)
@@ -277,13 +300,14 @@ func NewSARSA(config RLTrainingConfig, seed int64) (*Agent, error) {
 	return baseAgent, nil
 }
 
-// NewWorkerView creates a worker agent that shares Theta with the parent but
-// has independent Traces, Rand, and Policy. This is the core building block for
-// Hogwild! — each training goroutine gets its own view, and they all accumulate
-// gradients into the same shared weight vector.
+// NewWorkerView creates a worker agent that shares Theta and GlobalStep with
+// the parent but has independent Traces, Rand, and Policy. This is the core
+// building block for Hogwild! — each training goroutine gets its own view, and
+// they all accumulate gradients into the same shared weight vector.
 //
-// The returned agent has SaveInterval=0 (workers don't checkpoint), and its
-// NStep/NEpisode start at zero (worker-local counters).
+// NStep and NEpisode are worker-local (start at zero). The shared GlobalStep
+// counter tracks total combined steps across all workers, which drives
+// checkpoint saving at the configured save_every_nstep interval.
 func (a *Agent) NewWorkerView(config RLTrainingConfig, seed int64) *Agent {
 	return &Agent{
 		Kind:         a.Kind,
@@ -308,8 +332,10 @@ func (a *Agent) NewWorkerView(config RLTrainingConfig, seed int64) *Agent {
 		NStep:    0,
 		NEpisode: 0,
 
-		SaveInterval: 0, // Workers never save — only the main agent checkpoints
-		Name:         a.Name,
+		SaveInterval:  a.SaveInterval, // Inherit — workers can save checkpoints too
+		SaveDirectory: a.SaveDirectory,
+		Name:          a.Name,
+		GlobalStep:    a.GlobalStep, // Shared atomic counter across all workers
 	}
 }
 
