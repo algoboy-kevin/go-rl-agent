@@ -11,6 +11,16 @@ import (
 	"github.com/algoboy-kevin/go-rl-agent/pkg/runner"
 )
 
+// EpisodeInfo is passed to OnProgress after each completed episode.
+type EpisodeInfo struct {
+	CurrentEpisode int
+	TotalEpisodes  int
+	WorkerID       int
+	Reward         float64 // 0 if env doesn't provide it (caller can enrich)
+	Epsilon        float64 // from agent.Policy.Descr()
+	Alpha          float64 // from agent.Alpha
+}
+
 type Trainer struct {
 	nThreads       int
 	nEvalEpisodes  int
@@ -25,6 +35,8 @@ type Trainer struct {
 	config rl.RLTrainingConfig
 
 	onSpawnEnv func() (rl.Environment, error)
+
+	OnProgress func(info EpisodeInfo)
 }
 
 func NewTrainer(
@@ -137,6 +149,17 @@ func (t *Trainer) trainWorker(ctx context.Context, id int) error {
 
 		if _, err = experiment.RunEpisode(ctx, workerAgent); err != nil {
 			return err
+		}
+
+		if t.OnProgress != nil {
+			t.OnProgress(EpisodeInfo{
+				CurrentEpisode: episode,
+				TotalEpisodes:  t.nTrainEpisodes,
+				WorkerID:       id,
+				Reward:         0, // library doesn't know about EpisodeStatistic
+				Epsilon:        t.agent.Policy.Descr(),
+				Alpha:          t.agent.Alpha,
+			})
 		}
 	}
 
