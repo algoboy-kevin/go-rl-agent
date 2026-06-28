@@ -16,9 +16,7 @@ type EpisodeInfo struct {
 	CurrentEpisode int
 	TotalEpisodes  int
 	WorkerID       int
-	Reward         float64 // 0 if env doesn't provide it (caller can enrich)
-	Epsilon        float64 // from agent.Policy.Descr()
-	Alpha          float64 // from agent.Alpha
+	StatsData      any // Data from env.GetEpisodeStats() — caller type-asserts its concrete struct
 }
 
 type Trainer struct {
@@ -152,13 +150,16 @@ func (t *Trainer) trainWorker(ctx context.Context, id int) error {
 		}
 
 		if t.OnProgress != nil {
+			var statsData any
+			if stats, err := env.GetEpisodeStats(); err == nil && stats != nil {
+				statsData = stats.Data
+			}
+
 			t.OnProgress(EpisodeInfo{
 				CurrentEpisode: episode,
 				TotalEpisodes:  t.nTrainEpisodes,
 				WorkerID:       id,
-				Reward:         0, // library doesn't know about EpisodeStatistic
-				Epsilon:        t.agent.Policy.Descr(),
-				Alpha:          t.agent.Alpha,
+				StatsData:      statsData,
 			})
 		}
 	}
