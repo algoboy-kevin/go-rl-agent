@@ -29,6 +29,7 @@ type Agent struct {
 	NActions   int
 
 	GroupWeights []float64
+	GroupSplits  []int
 
 	Traces *Traces
 
@@ -71,6 +72,7 @@ func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 	var nTilings int
 	var nActions int
 	var groupWeights []float64
+	var groupSplits []int
 
 	// Try loading checkpoint if configured
 	if config.Model.LoadLastCheckpoint {
@@ -88,6 +90,7 @@ func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 				nTilings = saved.NTilings
 				nActions = saved.NActions
 				groupWeights = saved.GroupWeights
+				groupSplits = saved.GroupSplits
 			}
 		}
 	}
@@ -112,6 +115,8 @@ func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 		if equalSlices(groupWeights, arrWeight) {
 			groupWeights = []float64{1.0 / 3, 1.0 / 3, 1.0 / 3}
 		}
+
+		groupSplits = config.Learning.GroupSplits
 	}
 
 	globalStep := new(atomic.Int64)
@@ -123,6 +128,7 @@ func NewAgent(config RLTrainingConfig, seed int64) (*Agent, error) {
 		NTilings:     nTilings,
 		NActions:     nActions,
 		GroupWeights: groupWeights,
+		GroupSplits:  groupSplits,
 		Theta:        theta,
 
 		Traces: NewTraces(
@@ -319,6 +325,7 @@ func (a *Agent) NewWorkerView(config RLTrainingConfig, seed int64) *Agent {
 		NTilings:     a.NTilings,
 		NActions:     a.NActions,
 		GroupWeights: a.GroupWeights,
+		GroupSplits:  a.GroupSplits,
 
 		Theta:  a.Theta, // Shared with parent — Hogwild! relies on this
 		Traces: NewTraces(a.MemorySize, a.NTilings, a.NActions),

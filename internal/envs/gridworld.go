@@ -181,7 +181,7 @@ func (g *GridWorld) RunEpisode(ctx context.Context, agent *rl.Agent, cb func() i
 		return err
 	}
 
-	state := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings)
+	state := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings, agent.GroupSplits)
 	state.NewStateFromEnv(g)
 
 	for !g.IsTerminal() {
@@ -190,7 +190,7 @@ func (g *GridWorld) RunEpisode(ctx context.Context, agent *rl.Agent, cb func() i
 			return err
 		}
 
-		nextState := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings)
+		nextState := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings, agent.GroupSplits)
 		nextState.NewStateFromEnv(g)
 
 		agent.HandleTransition(state, int(action), g.GetReward(), nextState)

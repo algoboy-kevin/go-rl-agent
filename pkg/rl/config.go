@@ -29,6 +29,7 @@ type LearningConfig struct {
 	NActions     int       `yaml:"n_actions"`
 	Algorithm    string    `yaml:"algorithm"`
 	GroupWeights []float64 `yaml:"group_weights"`
+	GroupSplits  []int     `yaml:"group_splits"`
 	Gamma        float64   `yaml:"gamma"`
 	Lambda       float64   `yaml:"lambda"`
 	Omega        float64   `yaml:"omega"`

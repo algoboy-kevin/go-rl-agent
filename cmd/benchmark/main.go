@@ -64,14 +64,14 @@ func evaluate(agent *rl.Agent, g *envs.GridWorld, nEval int) (successPct float64
 
 	for ep := 0; ep < nEval; ep++ {
 		_ = g.Initialize()
-		state := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings)
+		state := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings, agent.GroupSplits)
 		_ = state.NewStateFromEnv(g)
 
 		steps := 0
 		for !g.IsTerminal() {
 			action := agent.Action(state)
 			_ = g.PerformAction(int(action))
-			nextState := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings)
+			nextState := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings, agent.GroupSplits)
 			_ = nextState.NewStateFromEnv(g)
 			agent.HandleTransition(state, int(action), g.GetReward(), nextState)
 			state = nextState
@@ -96,13 +96,13 @@ func evaluate(agent *rl.Agent, g *envs.GridWorld, nEval int) (successPct float64
 func trainDirect(ctx context.Context, agent *rl.Agent, g *envs.GridWorld, nEpisodes int) {
 	for ep := 0; ep < nEpisodes; ep++ {
 		_ = g.Initialize()
-		state := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings)
+		state := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings, agent.GroupSplits)
 		_ = state.NewStateFromEnv(g)
 
 		for !g.IsTerminal() {
 			action := agent.Action(state)
 			_ = g.PerformAction(int(action))
-			nextState := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings)
+			nextState := rl.NewStateInstance(agent.MemorySize, agent.NActions, agent.NTilings, agent.GroupSplits)
 			_ = nextState.NewStateFromEnv(g)
 			agent.HandleTransition(state, int(action), g.GetReward(), nextState)
 			state = nextState

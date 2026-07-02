@@ -8,6 +8,7 @@ type SavedAgent struct {
 	NTilings     int
 	NActions     int
 	GroupWeights []float64
+	GroupSplits  []int
 	NStep        int
 	NEpisode     int
 }

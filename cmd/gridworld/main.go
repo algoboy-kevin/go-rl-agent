@@ -68,6 +68,7 @@ func main() {
 			cfg.Learning.MemorySize,
 			cfg.Learning.NActions,
 			cfg.Learning.NTilings,
+			cfg.Learning.GroupSplits,
 		)
 		_ = state.NewStateFromEnv(env)
 
@@ -80,6 +81,7 @@ func main() {
 				cfg.Learning.MemorySize,
 				cfg.Learning.NActions,
 				cfg.Learning.NTilings,
+				cfg.Learning.GroupSplits,
 			)
 			_ = nextState.NewStateFromEnv(env)
 
